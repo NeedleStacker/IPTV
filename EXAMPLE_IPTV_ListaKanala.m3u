@@ -1,0 +1,23 @@
+#EXTM3U
+#EXTINF:-1 tvg-id="7873" tvg-name="HRT 1" tvg-logo="http://IpAddress/logo/Hrvatska/HRT1.png" group-title="Hrvatska" ,HRT 1
+http://domain.ext:port/username/rRgG66dDc/4455
+#EXTINF:-1 tvg-id="103" tvg-name="HRT 2" tvg-logo="http://IpAddress/logo/Hrvatska/HRT2.png" group-title="Hrvatska" ,HRT 2
+http://domain.ext:port/username/rRgG66dDc/6953
+#EXTINF:-1 tvg-logo="" group-title="Domaci filmovi" ,Priča o fabrici (1949) 
+http://IpAddress:port/movie/username/rRgG66dDc/file.mp4
+#EXTINF:-1 tvg-logo="http://image.somedb.ext/t/p/w154/2zhIugPpwfrDSPJjzP4jjAS.jpg" group-title="Domaci filmovi" ,Trojanski konj (1982) (1982)
+http://IpAddress:port/movie/username/rRgG66dDc/file.mp4
+#EXTINF:-1 tvg-logo="http://image.somedb.ext/t/p/w154/u0EfH2rLOvEKVvWGgzGRQn3.jpg" group-title="Strani filmovi" ,Before the Flood (2016) (2016)
+http://IpAddress:port/movie/username/rRgG66dDc/file.mp4
+#EXTINF:-1 tvg-logo="http://image.somedb.ext/t/p/w154/7YBAO3t3ZMlEz219HbxYhNT.jpg" group-title="Filmovi 2024" ,Out Come the Wolves (2024) 
+http://IpAddress:port/movie/username/rRgG66dDc/file.mp4
+#EXTINF:-1 tvg-logo="https://image.somedb.ext/t/p/w600_and_h900_bestv2/2yCFut7mAlbQSX3033mHgeQN.jpg" group-title="Domace serije" ,Preziveti Beograd : Season # 1 : Episode # 2 
+http://IpAddress:port/series/username/rRgG66dDc/file.mp4
+#EXTINF:-1 tvg-logo="https://image.somedb.ext/t/p/w600_and_h900_bestv2/2yCFut7mAlbQSX3033mHgeQN.jpg" group-title="Domace serije" ,Preziveti Beograd : Season # 1 : Episode # 3 
+http://IpAddress:port/series/username/rRgG66dDc/file.mp4
+#EXTINF:-1 tvg-logo="http://domain.ext:port/series_covers/cover-684.jpg" group-title="Domace serije" ,Konak kod Hilmije (2019) : Season # 1 : Episode # 1 
+http://IpAddress:port/series/username/rRgG66dDc/file.mp4
+#EXTINF:-1 tvg-logo="http://domain.ext:port/series_covers/cover-686.jpg" group-title="Strane serije" ,Evil 2019 : Season # 1 : Episode # 1 
+http://IpAddress:port/series/username/rRgG66dDc/file.mp4
+#EXTINF:-1 group-title="EXYU",Avaz radio
+http://domain.ext:port/radio/username/rRgG66dDc/1
