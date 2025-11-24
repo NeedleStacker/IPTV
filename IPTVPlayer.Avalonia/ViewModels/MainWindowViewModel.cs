@@ -10,6 +10,7 @@ using LibVLCSharp.Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -139,6 +140,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
             if (string.IsNullOrWhiteSpace(M3uFilePath)) return;
 
             _allChannels = await _m3uService.ParseM3u(M3uFilePath);
+            Debug.WriteLine($"[ViewModel] Loaded {_allChannels.Count} channels from service.");
             SettingsChanged();
 
             var groupTitles = _allChannels.Select(c => c.GroupTitle).Distinct().OrderBy(g => g).ToList();
@@ -277,6 +279,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
                         filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
                 }
 
+                Debug.WriteLine($"[ViewModel] Filtering channels. Selected Category: '{SelectedCategory}', Filter Text: '{FilterText}'. Returning {filteredChannels?.Count ?? 0} channels.");
                 return new ObservableCollection<Channel>(filteredChannels ?? new List<Channel>());
             }
         }
