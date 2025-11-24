@@ -5,5 +5,6 @@ namespace IPTVPlayer.Avalonia.Models
         public string? LastM3uPath { get; set; }
         public int Volume { get; set; }
         public bool IsAutoLoadEnabled { get; set; }
+        public double ButtonScale { get; set; } = 1.0;
     }
 }

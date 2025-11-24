@@ -20,6 +20,11 @@ namespace IPTVPlayer.Avalonia.Services
             }
             else
             {
+                // check if file exists
+                if (!File.Exists(filePath))
+                {
+                    return new List<Channel>();
+                }
                 content = await File.ReadAllTextAsync(filePath);
             }
 
@@ -44,13 +49,16 @@ namespace IPTVPlayer.Avalonia.Services
                     match = Regex.Match(line, "group-title=\"(.*?)\"");
                     if (match.Success) currentChannel.GroupTitle = match.Groups[1].Value;
 
-                    var nameMatch = Regex.Match(line, ",(.*?)$");
+                    var nameMatch = Regex.Match(line, ",(.+)$");
                     if (nameMatch.Success) currentChannel.Name = nameMatch.Groups[1].Value.Trim();
                 }
-                else if (!line.StartsWith("#") && currentChannel != null)
+                else if (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("#") && currentChannel != null)
                 {
                     currentChannel.Url = line.Trim();
-                    channels.Add(currentChannel);
+                    if(!string.IsNullOrWhiteSpace(currentChannel.Url))
+                    {
+                        channels.Add(currentChannel);
+                    }
                     currentChannel = null;
                 }
             }
