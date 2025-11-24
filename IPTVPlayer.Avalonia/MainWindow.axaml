@@ -72,11 +72,31 @@
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <!-- Left: Playback -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                        <Button Command="{Binding PlayCommand}" Content="▶ Play" FontSize="18" Padding="15,10"/>
-                        <Button Command="{Binding PauseCommand}" Content="❚❚ Pauza" FontSize="18" Padding="15,10"/>
-                        <Button Command="{Binding StopCommand}" Content="■ Stop" FontSize="18" Padding="15,10"/>
-                        <Button Command="{Binding PrevChannelCommand}" Content="&lt;&lt;" ToolTip.Tip="Prethodni kanal" FontSize="18" Padding="15,10"/>
-                        <Button Command="{Binding NextChannelCommand}" Content="&gt;&gt;" ToolTip.Tip="Sljedeći kanal" FontSize="18" Padding="15,10"/>
+                        <Button Command="{Binding PlayCommand}" Content="▶ Play" RenderTransformOrigin="50%,50%">
+                            <Button.RenderTransform>
+                                <ScaleTransform ScaleX="{Binding ButtonScale}" ScaleY="{Binding ButtonScale}" />
+                            </Button.RenderTransform>
+                        </Button>
+                        <Button Command="{Binding PauseCommand}" Content="❚❚ Pauza" RenderTransformOrigin="50%,50%">
+                            <Button.RenderTransform>
+                                <ScaleTransform ScaleX="{Binding ButtonScale}" ScaleY="{Binding ButtonScale}" />
+                            </Button.RenderTransform>
+                        </Button>
+                        <Button Command="{Binding StopCommand}" Content="■ Stop" RenderTransformOrigin="50%,50%">
+                            <Button.RenderTransform>
+                                <ScaleTransform ScaleX="{Binding ButtonScale}" ScaleY="{Binding ButtonScale}" />
+                            </Button.RenderTransform>
+                        </Button>
+                        <Button Command="{Binding PrevChannelCommand}" Content="&lt;&lt;" ToolTip.Tip="Prethodni kanal" RenderTransformOrigin="50%,50%">
+                             <Button.RenderTransform>
+                                <ScaleTransform ScaleX="{Binding ButtonScale}" ScaleY="{Binding ButtonScale}" />
+                            </Button.RenderTransform>
+                        </Button>
+                        <Button Command="{Binding NextChannelCommand}" Content="&gt;&gt;" ToolTip.Tip="Sljedeći kanal" RenderTransformOrigin="50%,50%">
+                             <Button.RenderTransform>
+                                <ScaleTransform ScaleX="{Binding ButtonScale}" ScaleY="{Binding ButtonScale}" />
+                            </Button.RenderTransform>
+                        </Button>
                     </StackPanel>
 
                     <!-- Center: Volume -->
@@ -87,10 +107,24 @@
 
                     <!-- Right: Other Controls -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-                        <Button Command="{Binding ToggleFullScreenCommand}" Content="Puni ekran" FontSize="18" Padding="15,10"/>
-                        <Button Command="{Binding ToggleThemeCommand}" Content="Tema" FontSize="18" Padding="15,10"/>
+                        <Button Command="{Binding ToggleFullScreenCommand}" Content="Puni ekran" RenderTransformOrigin="50%,50%">
+                             <Button.RenderTransform>
+                                <ScaleTransform ScaleX="{Binding ButtonScale}" ScaleY="{Binding ButtonScale}" />
+                            </Button.RenderTransform>
+                        </Button>
+                        <Button Command="{Binding ToggleThemeCommand}" Content="Tema" RenderTransformOrigin="50%,50%">
+                             <Button.RenderTransform>
+                                <ScaleTransform ScaleX="{Binding ButtonScale}" ScaleY="{Binding ButtonScale}" />
+                            </Button.RenderTransform>
+                        </Button>
                     </StackPanel>
                 </Grid>
+
+                <!-- Button Size Slider -->
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+                    <TextBlock Text="Veličina gumba:" VerticalAlignment="Center" FontSize="16"/>
+                    <Slider Value="{Binding ButtonScale, Mode=TwoWay}" Width="200" Minimum="1" Maximum="3" />
+                </StackPanel>
             </StackPanel>
         </DockPanel>
     </DockPanel>

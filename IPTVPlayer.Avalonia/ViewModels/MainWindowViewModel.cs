@@ -49,7 +49,8 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
                 if (!string.IsNullOrEmpty(SelectedCategory) && SelectedCategory != "Svi kanali")
                 {
-                    filteredChannels = filteredChannels.Where(c => c.GroupTitle == SelectedCategory).ToList();
+                    if (filteredChannels != null)
+                        filteredChannels = filteredChannels.Where(c => c.GroupTitle == SelectedCategory).ToList();
                 }
 
                 if (!string.IsNullOrEmpty(FilterText))
@@ -58,7 +59,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
                         filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
                 }
 
-                return new ObservableCollection<Channel>(filteredChannels);
+                return new ObservableCollection<Channel>(filteredChannels ?? new List<Channel>());
             }
         }
 
@@ -69,11 +70,13 @@ namespace IPTVPlayer.Avalonia.ViewModels
         [ObservableProperty]
         private double fontSize = 18;
 
-        [ObservableProperty]
-        private bool isVOD;
+        public bool IsVOD => MediaPlayer?.Length > 0;
 
         [ObservableProperty]
         private float position;
+
+        [ObservableProperty]
+        private double buttonScale = 1.0;
 
         public int Volume
         {
@@ -117,12 +120,18 @@ namespace IPTVPlayer.Avalonia.ViewModels
             }
         }
 
+        partial void OnButtonScaleChanged(double value)
+        {
+            SettingsChanged();
+        }
+
         private void LoadSettings()
         {
             var settings = _settingsService.LoadSettings();
             M3uFilePath = settings.LastM3uPath;
             Volume = settings.Volume;
             IsAutoLoadEnabled = settings.IsAutoLoadEnabled;
+            ButtonScale = settings.ButtonScale;
         }
 
         private void SettingsChanged()
@@ -131,7 +140,8 @@ namespace IPTVPlayer.Avalonia.ViewModels
             {
                 LastM3uPath = this.M3uFilePath,
                 Volume = this.Volume,
-                IsAutoLoadEnabled = this.IsAutoLoadEnabled
+                IsAutoLoadEnabled = this.IsAutoLoadEnabled,
+                ButtonScale = this.ButtonScale
             };
             _settingsService.SaveSettings(settings);
         }
