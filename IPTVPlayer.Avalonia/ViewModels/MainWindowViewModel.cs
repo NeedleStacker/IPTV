@@ -36,15 +36,15 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private ObservableCollection<string> categories;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(Channels))]
         private string? selectedCategory;
 
         [ObservableProperty]
         private Channel? selectedChannel;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(Channels))]
         private string? filterText;
+
+        public ObservableCollection<Channel> Channels { get; }
 
         [ObservableProperty]
         private double fontSize = 18;
@@ -87,6 +87,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
             _epgService = new EpgService();
             _allChannels = new List<Channel>();
             Categories = new ObservableCollection<string>();
+            Channels = new ObservableCollection<Channel>();
 
             _libVLC = new LibVLC();
             MediaPlayer = new MediaPlayer(_libVLC);
@@ -150,9 +151,35 @@ namespace IPTVPlayer.Avalonia.ViewModels
             }
 
             SelectedCategory = "Svi kanali";
-            OnPropertyChanged(nameof(Channels));
+            UpdateFilteredChannels();
 
             await LoadEpgData();
+        }
+
+        private void UpdateFilteredChannels()
+        {
+            var filteredChannels = _allChannels;
+
+            if (!string.IsNullOrEmpty(SelectedCategory) && SelectedCategory != "Svi kanali")
+            {
+                if (filteredChannels != null)
+                    filteredChannels = filteredChannels.Where(c => c.GroupTitle == SelectedCategory).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(FilterText))
+            {
+                if (filteredChannels != null)
+                    filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
+            }
+
+            Channels.Clear();
+            if (filteredChannels != null)
+            {
+                foreach(var channel in filteredChannels)
+                {
+                    Channels.Add(channel);
+                }
+            }
         }
 
         private async Task LoadEpgData()
@@ -162,7 +189,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
             {
                 channel.CurrentProgram = await _epgService.GetCurrentProgram(channel);
             }
-            OnPropertyChanged(nameof(Channels));
+            UpdateFilteredChannels();
         }
 
         [RelayCommand]
@@ -259,26 +286,14 @@ namespace IPTVPlayer.Avalonia.ViewModels
             Play(value);
         }
 
-        public ObservableCollection<Channel> Channels
+        partial void OnSelectedCategoryChanged(string? value)
         {
-            get
-            {
-                var filteredChannels = _allChannels;
+            UpdateFilteredChannels();
+        }
 
-                if (!string.IsNullOrEmpty(SelectedCategory) && SelectedCategory != "Svi kanali")
-                {
-                    if (filteredChannels != null)
-                        filteredChannels = filteredChannels.Where(c => c.GroupTitle == SelectedCategory).ToList();
-                }
-
-                if (!string.IsNullOrEmpty(FilterText))
-                {
-                    if (filteredChannels != null)
-                        filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
-                }
-
-                return new ObservableCollection<Channel>(filteredChannels ?? new List<Channel>());
-            }
+        partial void OnFilterTextChanged(string? value)
+        {
+            UpdateFilteredChannels();
         }
 
         partial void OnM3uFilePathChanged(string? value)

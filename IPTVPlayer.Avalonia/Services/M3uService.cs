@@ -20,7 +20,6 @@ namespace IPTVPlayer.Avalonia.Services
             }
             else
             {
-                // check if file exists
                 if (!File.Exists(filePath))
                 {
                     return new List<Channel>();
@@ -62,6 +61,7 @@ namespace IPTVPlayer.Avalonia.Services
                     currentChannel = null;
                 }
             }
+
             return channels;
         }
     }
