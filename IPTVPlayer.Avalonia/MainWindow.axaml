@@ -1,0 +1,73 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:IPTVPlayer.Avalonia.ViewModels"
+        xmlns:vlc="clr-namespace:LibVLCSharp.Avalonia;assembly=LibVLCSharp.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
+        x:Class="IPTVPlayer.Avalonia.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="IPTV Player (Avalonia)"
+        WindowState="Maximized">
+
+    <Grid ColumnDefinitions="Auto,350,*" RowDefinitions="Auto,*,Auto" Margin="5">
+
+        <!-- Row 0: M3U Loading Controls -->
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="5" Margin="0,0,0,5">
+            <TextBox Text="{Binding M3uFilePath}" Watermark="Putanja do M3U datoteke..." Width="500" />
+            <Button Command="{Binding SelectFileCommand}" Content="..." ToolTip.Tip="Odaberi lokalnu datoteku" />
+            <Button Command="{Binding LoadM3uCommand}" Content="Učitaj" />
+            <CheckBox IsChecked="{Binding IsAutoLoadEnabled}" Content="Automatski učitaj pri pokretanju" />
+        </StackPanel>
+
+        <!-- Row 1, Column 0: Categories List -->
+        <DockPanel Grid.Row="1" Grid.Column="0" Margin="0,0,5,0">
+            <TextBlock DockPanel.Dock="Top" Text="Kategorije" FontWeight="Bold" Margin="0,0,0,5"/>
+            <ListBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" MinWidth="200" />
+        </DockPanel>
+
+        <!-- Row 1, Column 1: Channels List and Filter -->
+        <DockPanel Grid.Row="1" Grid.Column="1" Margin="0,0,5,0">
+            <TextBox Text="{Binding FilterText, Mode=TwoWay}" DockPanel.Dock="Top" Watermark="Pretraži kanale..." Margin="0,0,0,5"/>
+            <DataGrid ItemsSource="{Binding Channels}"
+                      SelectedItem="{Binding SelectedChannel}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      FontSize="{Binding FontSize}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Kanal" Binding="{Binding Name}" Width="*" />
+                    <DataGridTextColumn Header="Program" Binding="{Binding CurrentProgram}" Width="2*" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+
+        <!-- Row 1, Column 2: Video Player -->
+        <Border Grid.Row="1" Grid.Column="2" BorderBrush="Black" BorderThickness="1">
+            <vlc:VideoView Name="videoView" />
+        </Border>
+
+        <!-- Row 2: Playback and Other Controls -->
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="10" Margin="0,5,0,0" HorizontalAlignment="Center">
+            <!-- Playback -->
+            <Button Command="{Binding PlayCommand}" CommandParameter="{Binding SelectedChannel}" Content="Play" />
+            <Button Command="{Binding StopCommand}" Content="Stop" />
+            <Button Command="{Binding PauseCommand}" Content="Pauza" />
+            <Button Command="{Binding PrevChannelCommand}" Content="&lt;&lt;" ToolTip.Tip="Prethodni kanal" />
+            <Button Command="{Binding NextChannelCommand}" Content="&gt;&gt;" ToolTip.Tip="Sljedeći kanal" />
+
+            <!-- Volume -->
+            <TextBlock Text="Zvuk:" VerticalAlignment="Center"/>
+            <Slider Value="{Binding Volume, Mode=TwoWay}" Width="120" Minimum="0" Maximum="100" VerticalAlignment="Center"/>
+
+            <!-- Display & Other -->
+            <Button Command="{Binding ToggleFullScreenCommand}" Content="Puni ekran" />
+            <Button Name="btnToggleFavorites" Content="Favoriti" />
+
+            <!-- Settings -->
+            <Button Command="{Binding ToggleThemeCommand}" Content="Tema" />
+            <Button Command="{Binding IncreaseFontSizeCommand}" Content="A+" ToolTip.Tip="Povećaj font" />
+            <Button Command="{Binding DecreaseFontSizeCommand}" Content="A-" ToolTip.Tip="Smanji font" />
+            <Button Name="btnProgram" Content="TV Raspored" />
+        </StackPanel>
+    </Grid>
+</Window>
