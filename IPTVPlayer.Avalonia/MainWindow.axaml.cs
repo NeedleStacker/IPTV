@@ -32,6 +32,7 @@ namespace IPTVPlayer.Avalonia
             };
 
             this.Loaded += MainWindow_Loaded;
+            this.Closing += (s, e) => _viewModel.Dispose();
         }
 
         private void MainWindow_Loaded(object? sender, RoutedEventArgs e)

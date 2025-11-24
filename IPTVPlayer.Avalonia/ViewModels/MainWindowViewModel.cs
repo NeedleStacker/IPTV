@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace IPTVPlayer.Avalonia.ViewModels
 {
-    public partial class MainWindowViewModel : ViewModelBase
+    public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         private readonly M3uService _m3uService;
         private readonly SettingsService _settingsService;
@@ -54,7 +54,8 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
                 if (!string.IsNullOrEmpty(FilterText))
                 {
-                    filteredChannels = filteredChannels.Where(c => c.Name.ToLower().Contains(FilterText.ToLower())).ToList();
+                    if (filteredChannels != null)
+                        filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
                 }
 
                 return new ObservableCollection<Channel>(filteredChannels);
@@ -66,7 +67,13 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private string? filterText;
 
         [ObservableProperty]
-        private double fontSize = 14;
+        private double fontSize = 18;
+
+        [ObservableProperty]
+        private bool isVOD;
+
+        [ObservableProperty]
+        private float position;
 
         public int Volume
         {
@@ -96,7 +103,18 @@ namespace IPTVPlayer.Avalonia.ViewModels
             _libVLC = new LibVLC();
             MediaPlayer = new MediaPlayer(_libVLC);
 
+            MediaPlayer.LengthChanged += (s, e) => OnPropertyChanged(nameof(IsVOD));
+            MediaPlayer.PositionChanged += (s, e) => Position = e.Position;
+
             LoadSettings();
+        }
+
+        partial void OnPositionChanged(float value)
+        {
+            if (Math.Abs(MediaPlayer.Position - value) > 0.01)
+            {
+                MediaPlayer.Position = value;
+            }
         }
 
         private void LoadSettings()
@@ -131,7 +149,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
             Categories.Add("Svi kanali");
             foreach (var group in groupTitles)
             {
-                Categories.Add(group);
+                if (group != null) Categories.Add(group);
             }
 
             SelectedCategory = "Svi kanali";
@@ -142,6 +160,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         private async Task LoadEpgData()
         {
+            if(_allChannels == null) return;
             foreach(var channel in _allChannels)
             {
                 channel.CurrentProgram = await _epgService.GetCurrentProgram(channel);
@@ -169,7 +188,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private void Play(Channel? channel = null)
         {
             var channelToPlay = channel ?? SelectedChannel;
-            if (channelToPlay == null) return;
+            if (channelToPlay?.Url == null) return;
             MediaPlayer.Play(new Media(_libVLC, channelToPlay.Url, FromType.FromLocation));
         }
 
@@ -216,20 +235,6 @@ namespace IPTVPlayer.Avalonia.ViewModels
         }
 
         [RelayCommand]
-        private void IncreaseFontSize()
-        {
-            if(FontSize < 24)
-                FontSize += 2;
-        }
-
-        [RelayCommand]
-        private void DecreaseFontSize()
-        {
-            if(FontSize > 10)
-                FontSize -= 2;
-        }
-
-        [RelayCommand]
         private void ToggleTheme()
         {
             if (Application.Current is null) return;
@@ -251,6 +256,12 @@ namespace IPTVPlayer.Avalonia.ViewModels
         partial void OnIsAutoLoadEnabledChanged(bool value)
         {
             SettingsChanged();
+        }
+
+        public void Dispose()
+        {
+            MediaPlayer?.Dispose();
+            _libVLC?.Dispose();
         }
     }
 }
