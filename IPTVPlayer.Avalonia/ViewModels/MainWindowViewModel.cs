@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -41,28 +42,6 @@ namespace IPTVPlayer.Avalonia.ViewModels
         [ObservableProperty]
         private Channel? selectedChannel;
 
-        public ObservableCollection<Channel> Channels
-        {
-            get
-            {
-                var filteredChannels = _allChannels;
-
-                if (!string.IsNullOrEmpty(SelectedCategory) && SelectedCategory != "Svi kanali")
-                {
-                    if (filteredChannels != null)
-                        filteredChannels = filteredChannels.Where(c => c.GroupTitle == SelectedCategory).ToList();
-                }
-
-                if (!string.IsNullOrEmpty(FilterText))
-                {
-                    if (filteredChannels != null)
-                        filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
-                }
-
-                return new ObservableCollection<Channel>(filteredChannels ?? new List<Channel>());
-            }
-        }
-
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(Channels))]
         private string? filterText;
@@ -77,6 +56,12 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         [ObservableProperty]
         private double buttonScale = 1.0;
+
+        [ObservableProperty]
+        private double buttonFontSize = 18;
+
+        [ObservableProperty]
+        private Thickness buttonPadding = new Thickness(15, 10);
 
         public int Volume
         {
@@ -122,6 +107,8 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         partial void OnButtonScaleChanged(double value)
         {
+            ButtonFontSize = 18 * value;
+            ButtonPadding = new Thickness(15 * value, 10 * value);
             SettingsChanged();
         }
 
@@ -131,7 +118,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
             M3uFilePath = settings.LastM3uPath;
             Volume = settings.Volume;
             IsAutoLoadEnabled = settings.IsAutoLoadEnabled;
-            ButtonScale = settings.ButtonScale;
+            ButtonScale = settings.ButtonScale > 1 ? settings.ButtonScale : 1;
         }
 
         private void SettingsChanged()
@@ -239,6 +226,20 @@ namespace IPTVPlayer.Avalonia.ViewModels
         }
 
         [RelayCommand]
+        private void IncreaseVolume()
+        {
+            if (Volume < 100)
+                Volume = Math.Min(100, Volume + 10);
+        }
+
+        [RelayCommand]
+        private void DecreaseVolume()
+        {
+            if (Volume > 0)
+                Volume = Math.Max(0, Volume - 10);
+        }
+
+        [RelayCommand]
         private void ToggleFullScreen()
         {
             ToggleFullScreenAction?.Invoke();
@@ -256,6 +257,28 @@ namespace IPTVPlayer.Avalonia.ViewModels
         partial void OnSelectedChannelChanged(Channel? value)
         {
             Play(value);
+        }
+
+        public ObservableCollection<Channel> Channels
+        {
+            get
+            {
+                var filteredChannels = _allChannels;
+
+                if (!string.IsNullOrEmpty(SelectedCategory) && SelectedCategory != "Svi kanali")
+                {
+                    if (filteredChannels != null)
+                        filteredChannels = filteredChannels.Where(c => c.GroupTitle == SelectedCategory).ToList();
+                }
+
+                if (!string.IsNullOrEmpty(FilterText))
+                {
+                    if (filteredChannels != null)
+                        filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
+                }
+
+                return new ObservableCollection<Channel>(filteredChannels ?? new List<Channel>());
+            }
         }
 
         partial void OnM3uFilePathChanged(string? value)
