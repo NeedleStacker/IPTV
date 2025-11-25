@@ -64,7 +64,7 @@
             </Border>
 
             <!-- Playback Controls -->
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Vertical" Spacing="10" Margin="10">
+            <StackPanel Name="playbackControls" DockPanel.Dock="Bottom" Orientation="Vertical" Spacing="10" Margin="10">
 
                 <!-- Progress Bar (for VOD) -->
                 <Slider Value="{Binding Position, Mode=TwoWay}" Minimum="0" Maximum="1" IsVisible="{Binding IsVOD}" />

@@ -45,7 +45,8 @@ namespace IPTVPlayer.Avalonia.ViewModels
         [ObservableProperty]
         private string? filterText;
 
-        public ObservableCollection<Channel> Channels { get; }
+        [ObservableProperty]
+        private ObservableCollection<Channel> channels;
 
         [ObservableProperty]
         private double fontSize = 18;
@@ -88,7 +89,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
             _epgService = new EpgService();
             _allChannels = new List<Channel>();
             Categories = new ObservableCollection<string>();
-            Channels = new ObservableCollection<Channel>();
+            channels = new ObservableCollection<Channel>();
 
             _libVLC = new LibVLC();
             MediaPlayer = new MediaPlayer(_libVLC);
@@ -184,14 +185,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
             Debug.WriteLine($"[ViewModel]   - After filtering (Category: '{SelectedCategory}', Filter: '{FilterText}'): {filteredChannels?.Count ?? 0} channels.");
 
-            Channels.Clear();
-            if (filteredChannels != null)
-            {
-                foreach(var channel in filteredChannels)
-                {
-                    Channels.Add(channel);
-                }
-            }
+            Channels = new ObservableCollection<Channel>(filteredChannels ?? Enumerable.Empty<Channel>());
             Debug.WriteLine($"[ViewModel]   - Final collection for UI has {Channels.Count} channels.");
         }
 
