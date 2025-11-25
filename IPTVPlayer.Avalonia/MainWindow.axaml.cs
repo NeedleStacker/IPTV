@@ -32,6 +32,20 @@ namespace IPTVPlayer.Avalonia
             }
         }
 
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == WindowStateProperty && WindowState == WindowState.Maximized)
+            {
+                // Un-fullscreen if the user maximizes the window manually
+                if (_viewModel.IsVideoFullScreen)
+                {
+                    _viewModel.IsVideoFullScreen = false;
+                }
+            }
+        }
+
         private void MainWindow_Loaded(object? sender, RoutedEventArgs e)
         {
             var videoView = this.FindControl<VideoView>("videoView");
