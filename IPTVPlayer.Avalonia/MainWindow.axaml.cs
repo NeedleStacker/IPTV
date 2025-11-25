@@ -1,10 +1,11 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
 using IPTVPlayer.Avalonia.ViewModels;
 using LibVLCSharp.Avalonia;
-using System.Diagnostics;
+using System.ComponentModel;
 
 namespace IPTVPlayer.Avalonia
 {
@@ -18,26 +19,35 @@ namespace IPTVPlayer.Avalonia
             _viewModel = new MainWindowViewModel();
             DataContext = _viewModel;
 
-            _viewModel.ToggleFullScreenAction = () =>
-            {
-                WindowState = WindowState == WindowState.FullScreen ? WindowState.Maximized : WindowState.FullScreen;
-            };
-
-            _viewModel.SetThemeAction = (theme) =>
-            {
-                if (Application.Current != null)
-                {
-                    Application.Current.RequestedThemeVariant = theme;
-                }
-            };
-
+            this.KeyDown += MainWindow_KeyDown;
             this.Loaded += MainWindow_Loaded;
             this.Closing += (s, e) => _viewModel.Dispose();
         }
 
+        private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape && _viewModel.IsVideoFullScreen)
+            {
+                _viewModel.IsVideoFullScreen = false;
+            }
+        }
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == WindowStateProperty && WindowState == WindowState.Maximized)
+            {
+                // Un-fullscreen if the user maximizes the window manually
+                if (_viewModel.IsVideoFullScreen)
+                {
+                    _viewModel.IsVideoFullScreen = false;
+                }
+            }
+        }
+
         private void MainWindow_Loaded(object? sender, RoutedEventArgs e)
         {
-            Debug.WriteLine("[MainWindow] Window Loaded event fired.");
             var videoView = this.FindControl<VideoView>("videoView");
             if (videoView != null)
             {
@@ -46,12 +56,7 @@ namespace IPTVPlayer.Avalonia
 
             if (_viewModel.IsAutoLoadEnabled && _viewModel.LoadM3uCommand.CanExecute(null))
             {
-                Debug.WriteLine("[MainWindow] Auto-load is enabled. Executing LoadM3uCommand.");
                 _viewModel.LoadM3uCommand.Execute(null);
-            }
-            else
-            {
-                Debug.WriteLine("[MainWindow] Auto-load is disabled or command cannot execute.");
             }
         }
     }

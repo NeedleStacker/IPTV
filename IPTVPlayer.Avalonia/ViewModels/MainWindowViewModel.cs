@@ -1,7 +1,9 @@
 using Avalonia;
-using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using IPTVPlayer.Avalonia.Models;
@@ -10,7 +12,6 @@ using LibVLCSharp.Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,11 +19,11 @@ namespace IPTVPlayer.Avalonia.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
-        private readonly M3uService _m3uService;
-        private readonly SettingsService _settingsService;
-        private readonly EpgService _epgService;
-        private List<Channel> _allChannels;
-        private LibVLC _libVLC;
+        private readonly M3uService _m3uService = new();
+        private readonly SettingsService _settingsService = new();
+        private readonly EpgService _epgService = new();
+        private List<Channel> _allChannels = new();
+        private readonly LibVLC _libVLC = new();
 
         [ObservableProperty]
         private MediaPlayer mediaPlayer;
@@ -37,6 +38,8 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private ObservableCollection<string> categories;
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(MoveCategoryUpCommand))]
+        [NotifyCanExecuteChangedFor(nameof(MoveCategoryDownCommand))]
         private string? selectedCategory;
 
         [ObservableProperty]
@@ -62,36 +65,29 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private double buttonFontSize = 18;
 
         [ObservableProperty]
-        private Thickness buttonPadding = new Thickness(15, 10);
+        private Thickness buttonPadding = new(15, 10);
 
-        public int Volume
-        {
-            get => MediaPlayer.Volume;
-            set
-            {
-                if (MediaPlayer.Volume != value)
-                {
-                    MediaPlayer.Volume = value;
-                    OnPropertyChanged();
-                    SettingsChanged();
-                }
-            }
-        }
+        [ObservableProperty]
+        private bool isVideoFullScreen;
+
+        [ObservableProperty]
+        private WindowState windowState = WindowState.Maximized;
+
+        [ObservableProperty]
+        private SystemDecorations systemDecorations = SystemDecorations.Full;
+
+        [ObservableProperty]
+        private int volume;
 
         public Action? ToggleFullScreenAction { get; set; }
         public Action<ThemeVariant>? SetThemeAction { get; set; }
 
         public MainWindowViewModel()
         {
-            _m3uService = new M3uService();
-            _settingsService = new SettingsService();
-            _epgService = new EpgService();
-            _allChannels = new List<Channel>();
-            Categories = new ObservableCollection<string>();
-            Channels = new ObservableCollection<Channel>();
+            Categories = new();
+            Channels = new();
 
-            _libVLC = new LibVLC();
-            MediaPlayer = new MediaPlayer(_libVLC);
+            MediaPlayer = new(_libVLC);
 
             MediaPlayer.LengthChanged += (s, e) => OnPropertyChanged(nameof(IsVOD));
             MediaPlayer.PositionChanged += (s, e) => Position = e.Position;
@@ -110,7 +106,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
         partial void OnButtonScaleChanged(double value)
         {
             ButtonFontSize = 18 * value;
-            ButtonPadding = new Thickness(15 * value, 10 * value);
+            ButtonPadding = new(15 * value, 10 * value);
             SettingsChanged();
         }
 
@@ -125,40 +121,40 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         private void SettingsChanged()
         {
-            var settings = new AppSettings
-            {
-                LastM3uPath = this.M3uFilePath,
-                Volume = this.Volume,
-                IsAutoLoadEnabled = this.IsAutoLoadEnabled,
-                ButtonScale = this.ButtonScale
-            };
+            var settings = _settingsService.LoadSettings(); // Load existing to preserve other settings
+            settings.LastM3uPath = M3uFilePath;
+            settings.Volume = Volume;
+            settings.IsAutoLoadEnabled = IsAutoLoadEnabled;
+            settings.ButtonScale = ButtonScale;
+            settings.CategoryOrder = new(Categories); // Save current order
             _settingsService.SaveSettings(settings);
         }
 
         [RelayCommand]
         private async Task LoadM3u()
         {
-            if (string.IsNullOrWhiteSpace(M3uFilePath))
-            {
-                Debug.WriteLine("[ViewModel] LoadM3u called but M3uFilePath is empty. Aborting.");
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(M3uFilePath)) return;
 
-            Debug.WriteLine("[ViewModel] LoadM3u command started.");
             _allChannels = await _m3uService.ParseM3u(M3uFilePath);
-            Debug.WriteLine($"[ViewModel] Loaded {_allChannels.Count} channels from service.");
-            SettingsChanged();
 
-            var groupTitles = _allChannels.Select(c => c.GroupTitle).Distinct().OrderBy(g => g).ToList();
+            var settings = _settingsService.LoadSettings();
+            var savedOrder = settings.CategoryOrder;
+
+            var groupTitles = _allChannels.Select(c => c.GroupTitle).Distinct().ToList();
+            var sortedCategories = groupTitles
+                .OrderBy(c => savedOrder.IndexOf(c ?? string.Empty) == -1 ? int.MaxValue : savedOrder.IndexOf(c ?? string.Empty))
+                .ThenBy(c => c)
+                .ToList();
+
             Categories.Clear();
             Categories.Add("Svi kanali");
-            foreach (var group in groupTitles)
+            foreach (var group in sortedCategories)
             {
                 if (group != null) Categories.Add(group);
             }
-            Debug.WriteLine($"[ViewModel] Found {Categories.Count} categories.");
 
             SelectedCategory = "Svi kanali";
+            SettingsChanged(); // Save the potentially updated category list
             UpdateFilteredChannels();
 
             await LoadEpgData();
@@ -166,9 +162,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         private void UpdateFilteredChannels()
         {
-            Debug.WriteLine("[ViewModel] UpdateFilteredChannels called.");
             var filteredChannels = _allChannels;
-            Debug.WriteLine($"[ViewModel]   - Before filtering: {filteredChannels?.Count ?? 0} channels.");
 
             if (!string.IsNullOrEmpty(SelectedCategory) && SelectedCategory != "Svi kanali")
             {
@@ -179,20 +173,20 @@ namespace IPTVPlayer.Avalonia.ViewModels
             if (!string.IsNullOrEmpty(FilterText))
             {
                 if (filteredChannels != null)
-                    filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
+                    filteredChannels = filteredChannels.Where(c => c.Name?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) == true).ToList();
             }
 
-            Debug.WriteLine($"[ViewModel]   - After filtering (Category: '{SelectedCategory}', Filter: '{FilterText}'): {filteredChannels?.Count ?? 0} channels.");
-
-            Channels.Clear();
-            if (filteredChannels != null)
+            Dispatcher.UIThread.Post(() =>
             {
-                foreach(var channel in filteredChannels)
+                Channels.Clear();
+                if (filteredChannels != null)
                 {
-                    Channels.Add(channel);
+                    foreach(var channel in filteredChannels)
+                    {
+                        Channels.Add(channel);
+                    }
                 }
-            }
-            Debug.WriteLine($"[ViewModel]   - Final collection for UI has {Channels.Count} channels.");
+            });
         }
 
         private async Task LoadEpgData()
@@ -208,15 +202,24 @@ namespace IPTVPlayer.Avalonia.ViewModels
         [RelayCommand]
         private async Task SelectFile()
         {
-            var dialog = new OpenFileDialog();
-            dialog.Filters.Add(new FileDialogFilter() { Name = "M3U datoteke", Extensions = { "m3u", "m3u8" } });
-            dialog.AllowMultiple = false;
-
-            var result = await dialog.ShowAsync(new Window());
-
-            if (result != null && result.Any())
+            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop || desktop.MainWindow is null)
             {
-                M3uFilePath = result.First();
+                return;
+            }
+
+            var files = await desktop.MainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Odaberi M3U datoteku",
+                AllowMultiple = false,
+                FileTypeFilter = new[] { new FilePickerFileType("M3U datoteke") { Patterns = new[] { "*.m3u", "*.m3u8" } } }
+            });
+
+            if (files.Count > 0)
+            {
+                var path = files[0].TryGetLocalPath();
+                if (path is null) return;
+
+                M3uFilePath = path;
                 await LoadM3u();
             }
         }
@@ -226,7 +229,11 @@ namespace IPTVPlayer.Avalonia.ViewModels
         {
             var channelToPlay = channel ?? SelectedChannel;
             if (channelToPlay?.Url == null) return;
-            MediaPlayer.Play(new Media(_libVLC, channelToPlay.Url, FromType.FromLocation));
+
+            if (Uri.TryCreate(channelToPlay.Url, UriKind.Absolute, out var uri))
+            {
+                MediaPlayer.Play(new Media(_libVLC, uri));
+            }
         }
 
         [RelayCommand]
@@ -265,24 +272,66 @@ namespace IPTVPlayer.Avalonia.ViewModels
             }
         }
 
+        [RelayCommand(CanExecute = nameof(CanMoveCategoryUp))]
+        private void MoveCategoryUp()
+        {
+            if (SelectedCategory == null) return;
+            var index = Categories.IndexOf(SelectedCategory);
+            Categories.Move(index, index - 1);
+            SelectedCategory = Categories[index - 1]; // Keep the item selected
+            SettingsChanged();
+        }
+
+        private bool CanMoveCategoryUp()
+        {
+            if (SelectedCategory == null || SelectedCategory == "Svi kanali") return false;
+            return Categories.IndexOf(SelectedCategory) > 1; // Cannot move above "Svi kanali"
+        }
+
+        [RelayCommand(CanExecute = nameof(CanMoveCategoryDown))]
+        private void MoveCategoryDown()
+        {
+            if (SelectedCategory == null) return;
+            var index = Categories.IndexOf(SelectedCategory);
+            Categories.Move(index, index + 1);
+            SelectedCategory = Categories[index + 1]; // Keep the item selected
+            SettingsChanged();
+        }
+
+        private bool CanMoveCategoryDown()
+        {
+            if (SelectedCategory == null || SelectedCategory == "Svi kanali") return false;
+            return Categories.IndexOf(SelectedCategory) < Categories.Count - 1;
+        }
+
+        partial void OnVolumeChanged(int value)
+        {
+            MediaPlayer.Volume = value;
+            SettingsChanged();
+        }
+
         [RelayCommand]
         private void IncreaseVolume()
         {
-            if (Volume < 100)
-                Volume = Math.Min(100, Volume + 10);
+            Volume = Math.Min(100, Volume + 5);
         }
 
         [RelayCommand]
         private void DecreaseVolume()
         {
-            if (Volume > 0)
-                Volume = Math.Max(0, Volume - 10);
+            Volume = Math.Max(0, Volume - 5);
         }
 
         [RelayCommand]
         private void ToggleFullScreen()
         {
-            ToggleFullScreenAction?.Invoke();
+            IsVideoFullScreen = !IsVideoFullScreen;
+        }
+
+        partial void OnIsVideoFullScreenChanged(bool value)
+        {
+            WindowState = value ? WindowState.FullScreen : WindowState.Maximized;
+            SystemDecorations = value ? SystemDecorations.None : SystemDecorations.Full;
         }
 
         [RelayCommand]
@@ -301,7 +350,10 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         partial void OnSelectedCategoryChanged(string? value)
         {
-            UpdateFilteredChannels();
+            if (value != null)
+            {
+                UpdateFilteredChannels();
+            }
         }
 
         partial void OnFilterTextChanged(string? value)
@@ -323,6 +375,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
         {
             MediaPlayer?.Dispose();
             _libVLC?.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -25,7 +25,8 @@ namespace IPTVPlayer.Avalonia.Services
             }
 
             var json = File.ReadAllText(_settingsFilePath);
-            return JsonConvert.DeserializeObject<AppSettings>(json);
+            var settings = JsonConvert.DeserializeObject<AppSettings>(json);
+            return settings ?? new AppSettings { Volume = 50, IsAutoLoadEnabled = false };
         }
 
         public void SaveSettings(AppSettings settings)
