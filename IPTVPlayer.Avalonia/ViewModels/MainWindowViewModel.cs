@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using IPTVPlayer.Avalonia.Models;
@@ -10,7 +11,6 @@ using LibVLCSharp.Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -37,6 +37,8 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private ObservableCollection<string> categories;
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(MoveCategoryUpCommand))]
+        [NotifyCanExecuteChangedFor(nameof(MoveCategoryDownCommand))]
         private string? selectedCategory;
 
         [ObservableProperty]
@@ -125,40 +127,40 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         private void SettingsChanged()
         {
-            var settings = new AppSettings
-            {
-                LastM3uPath = this.M3uFilePath,
-                Volume = this.Volume,
-                IsAutoLoadEnabled = this.IsAutoLoadEnabled,
-                ButtonScale = this.ButtonScale
-            };
+            var settings = _settingsService.LoadSettings(); // Load existing to preserve other settings
+            settings.LastM3uPath = this.M3uFilePath;
+            settings.Volume = this.Volume;
+            settings.IsAutoLoadEnabled = this.IsAutoLoadEnabled;
+            settings.ButtonScale = this.ButtonScale;
+            settings.CategoryOrder = new List<string>(this.Categories); // Save current order
             _settingsService.SaveSettings(settings);
         }
 
         [RelayCommand]
         private async Task LoadM3u()
         {
-            if (string.IsNullOrWhiteSpace(M3uFilePath))
-            {
-                Debug.WriteLine("[ViewModel] LoadM3u called but M3uFilePath is empty. Aborting.");
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(M3uFilePath)) return;
 
-            Debug.WriteLine("[ViewModel] LoadM3u command started.");
             _allChannels = await _m3uService.ParseM3u(M3uFilePath);
-            Debug.WriteLine($"[ViewModel] Loaded {_allChannels.Count} channels from service.");
-            SettingsChanged();
 
-            var groupTitles = _allChannels.Select(c => c.GroupTitle).Distinct().OrderBy(g => g).ToList();
+            var settings = _settingsService.LoadSettings();
+            var savedOrder = settings.CategoryOrder;
+
+            var groupTitles = _allChannels.Select(c => c.GroupTitle).Distinct().ToList();
+            var sortedCategories = groupTitles
+                .OrderBy(c => savedOrder.IndexOf(c ?? string.Empty) == -1 ? int.MaxValue : savedOrder.IndexOf(c ?? string.Empty))
+                .ThenBy(c => c)
+                .ToList();
+
             Categories.Clear();
             Categories.Add("Svi kanali");
-            foreach (var group in groupTitles)
+            foreach (var group in sortedCategories)
             {
                 if (group != null) Categories.Add(group);
             }
-            Debug.WriteLine($"[ViewModel] Found {Categories.Count} categories.");
 
             SelectedCategory = "Svi kanali";
+            SettingsChanged(); // Save the potentially updated category list
             UpdateFilteredChannels();
 
             await LoadEpgData();
@@ -166,9 +168,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         private void UpdateFilteredChannels()
         {
-            Debug.WriteLine("[ViewModel] UpdateFilteredChannels called.");
             var filteredChannels = _allChannels;
-            Debug.WriteLine($"[ViewModel]   - Before filtering: {filteredChannels?.Count ?? 0} channels.");
 
             if (!string.IsNullOrEmpty(SelectedCategory) && SelectedCategory != "Svi kanali")
             {
@@ -182,17 +182,17 @@ namespace IPTVPlayer.Avalonia.ViewModels
                     filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
             }
 
-            Debug.WriteLine($"[ViewModel]   - After filtering (Category: '{SelectedCategory}', Filter: '{FilterText}'): {filteredChannels?.Count ?? 0} channels.");
-
-            Channels.Clear();
-            if (filteredChannels != null)
+            Dispatcher.UIThread.Post(() =>
             {
-                foreach(var channel in filteredChannels)
+                Channels.Clear();
+                if (filteredChannels != null)
                 {
-                    Channels.Add(channel);
+                    foreach(var channel in filteredChannels)
+                    {
+                        Channels.Add(channel);
+                    }
                 }
-            }
-            Debug.WriteLine($"[ViewModel]   - Final collection for UI has {Channels.Count} channels.");
+            });
         }
 
         private async Task LoadEpgData()
@@ -263,6 +263,36 @@ namespace IPTVPlayer.Avalonia.ViewModels
             {
                 SelectedChannel = currentChannels[currentIndex - 1];
             }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanMoveCategoryUp))]
+        private void MoveCategoryUp()
+        {
+            if (SelectedCategory == null) return;
+            var index = Categories.IndexOf(SelectedCategory);
+            Categories.Move(index, index - 1);
+            SettingsChanged();
+        }
+
+        private bool CanMoveCategoryUp()
+        {
+            if (SelectedCategory == null || SelectedCategory == "Svi kanali") return false;
+            return Categories.IndexOf(SelectedCategory) > 1; // Cannot move above "Svi kanali"
+        }
+
+        [RelayCommand(CanExecute = nameof(CanMoveCategoryDown))]
+        private void MoveCategoryDown()
+        {
+            if (SelectedCategory == null) return;
+            var index = Categories.IndexOf(SelectedCategory);
+            Categories.Move(index, index + 1);
+            SettingsChanged();
+        }
+
+        private bool CanMoveCategoryDown()
+        {
+            if (SelectedCategory == null || SelectedCategory == "Svi kanali") return false;
+            return Categories.IndexOf(SelectedCategory) < Categories.Count - 1;
         }
 
         [RelayCommand]
