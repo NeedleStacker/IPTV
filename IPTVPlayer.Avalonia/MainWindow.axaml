@@ -8,7 +8,8 @@
         x:Class="IPTVPlayer.Avalonia.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="IPTV Player"
-        WindowState="Maximized"
+        WindowState="{Binding WindowState}"
+        SystemDecorations="{Binding SystemDecorations}"
         WindowStartupLocation="CenterScreen">
 
     <DockPanel>
@@ -42,8 +43,15 @@
         </DockPanel>
 
         <!-- Main Content Grid -->
-        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*">
-
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
             <!-- Top Bar -->
             <Border Grid.Row="0" Grid.ColumnSpan="2" Padding="10" BorderBrush="Gray" BorderThickness="0,0,0,1" IsVisible="{Binding !IsVideoFullScreen}">
                 <Grid ColumnDefinitions="*,Auto,Auto,Auto">
@@ -83,11 +91,9 @@
             </Grid>
 
             <!-- Video Player -->
-            <DockPanel Grid.Row="1" Grid.Column="1">
-                <Border BorderBrush="Black" BorderThickness="1" Margin="10" ClipToBounds="True">
-                    <vlc:VideoView Name="videoView" />
-                </Border>
-            </DockPanel>
+            <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="10" ClipToBounds="True">
+                <vlc:VideoView Name="videoView" />
+            </Border>
 
         </Grid>
     </DockPanel>

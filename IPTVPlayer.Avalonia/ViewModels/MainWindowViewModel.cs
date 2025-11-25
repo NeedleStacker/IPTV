@@ -70,19 +70,14 @@ namespace IPTVPlayer.Avalonia.ViewModels
         [ObservableProperty]
         private bool isVideoFullScreen;
 
-        public int Volume
-        {
-            get => MediaPlayer.Volume;
-            set
-            {
-                if (MediaPlayer.Volume != value)
-                {
-                    MediaPlayer.Volume = value;
-                    OnPropertyChanged();
-                    SettingsChanged();
-                }
-            }
-        }
+        [ObservableProperty]
+        private WindowState windowState = WindowState.Maximized;
+
+        [ObservableProperty]
+        private SystemDecorations systemDecorations = SystemDecorations.Full;
+
+        [ObservableProperty]
+        private int volume;
 
         public Action? ToggleFullScreenAction { get; set; }
         public Action<ThemeVariant>? SetThemeAction { get; set; }
@@ -309,24 +304,34 @@ namespace IPTVPlayer.Avalonia.ViewModels
             return Categories.IndexOf(SelectedCategory) < Categories.Count - 1;
         }
 
+        partial void OnVolumeChanged(int value)
+        {
+            MediaPlayer.Volume = value;
+            SettingsChanged();
+        }
+
         [RelayCommand]
         private void IncreaseVolume()
         {
-            if (Volume < 100)
-                Volume = Math.Min(100, Volume + 10);
+            Volume = Math.Min(100, Volume + 5);
         }
 
         [RelayCommand]
         private void DecreaseVolume()
         {
-            if (Volume > 0)
-                Volume = Math.Max(0, Volume - 10);
+            Volume = Math.Max(0, Volume - 5);
         }
 
         [RelayCommand]
         private void ToggleFullScreen()
         {
             IsVideoFullScreen = !IsVideoFullScreen;
+        }
+
+        partial void OnIsVideoFullScreenChanged(bool value)
+        {
+            WindowState = value ? WindowState.FullScreen : WindowState.Maximized;
+            SystemDecorations = value ? SystemDecorations.None : SystemDecorations.Full;
         }
 
         [RelayCommand]
@@ -345,7 +350,10 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         partial void OnSelectedCategoryChanged(string? value)
         {
-            UpdateFilteredChannels();
+            if (value != null)
+            {
+                UpdateFilteredChannels();
+            }
         }
 
         partial void OnFilterTextChanged(string? value)
