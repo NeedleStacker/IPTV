@@ -11,7 +11,36 @@
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen">
 
-    <Grid>
+    <DockPanel>
+        <!-- Controls Overlay -->
+        <DockPanel DockPanel.Dock="Bottom" IsVisible="{Binding !IsVideoFullScreen}">
+            <StackPanel Orientation="Vertical" Spacing="10" Margin="10">
+                <Slider Value="{Binding Position, Mode=TwoWay}" Minimum="0" Maximum="1" IsVisible="{Binding IsVOD}" />
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                        <Button Command="{Binding PlayCommand}" Content="▶ Play" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
+                        <Button Command="{Binding PauseCommand}" Content="❚❚ Pauza" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
+                        <Button Command="{Binding StopCommand}" Content="■ Stop" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
+                        <Button Command="{Binding PrevChannelCommand}" Content="&lt;&lt;" ToolTip.Tip="Prethodni kanal" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
+                        <Button Command="{Binding NextChannelCommand}" Content="&gt;&gt;" ToolTip.Tip="Sljedeći kanal" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Command="{Binding DecreaseVolumeCommand}" Content="-" FontSize="18" Padding="15,10"/>
+                        <Slider Value="{Binding Volume, Mode=TwoWay}" Width="200" Minimum="0" Maximum="100"/>
+                        <Button Command="{Binding IncreaseVolumeCommand}" Content="+" FontSize="18" Padding="15,10"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                        <Button Command="{Binding ToggleFullScreenCommand}" Content="Puni ekran" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
+                        <Button Command="{Binding ToggleThemeCommand}" Content="Tema" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
+                    </StackPanel>
+                </Grid>
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+                    <TextBlock Text="Veličina gumba:" VerticalAlignment="Center" FontSize="16"/>
+                    <Slider Value="{Binding ButtonScale, Mode=TwoWay}" Width="200" Minimum="1" Maximum="2" />
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+
         <!-- Main Content Grid -->
         <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*">
 
@@ -53,7 +82,7 @@
                 </DockPanel>
             </Grid>
 
-            <!-- Video Player and Controls -->
+            <!-- Video Player -->
             <DockPanel Grid.Row="1" Grid.Column="1">
                 <Border BorderBrush="Black" BorderThickness="1" Margin="10" ClipToBounds="True">
                     <vlc:VideoView Name="videoView" />
@@ -61,34 +90,5 @@
             </DockPanel>
 
         </Grid>
-
-        <!-- Controls Overlay -->
-        <DockPanel VerticalAlignment="Bottom" IsVisible="{Binding !IsVideoFullScreen}">
-            <StackPanel Orientation="Vertical" Spacing="10" Margin="10">
-                <Slider Value="{Binding Position, Mode=TwoWay}" Minimum="0" Maximum="1" IsVisible="{Binding IsVOD}" />
-                <Grid ColumnDefinitions="Auto,*,Auto">
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                        <Button Command="{Binding PlayCommand}" Content="▶ Play" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
-                        <Button Command="{Binding PauseCommand}" Content="❚❚ Pauza" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
-                        <Button Command="{Binding StopCommand}" Content="■ Stop" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
-                        <Button Command="{Binding PrevChannelCommand}" Content="&lt;&lt;" ToolTip.Tip="Prethodni kanal" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
-                        <Button Command="{Binding NextChannelCommand}" Content="&gt;&gt;" ToolTip.Tip="Sljedeći kanal" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Button Command="{Binding DecreaseVolumeCommand}" Content="-" FontSize="18" Padding="15,10"/>
-                        <Slider Value="{Binding Volume, Mode=TwoWay}" Width="200" Minimum="0" Maximum="100"/>
-                        <Button Command="{Binding IncreaseVolumeCommand}" Content="+" FontSize="18" Padding="15,10"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-                        <Button Command="{Binding ToggleFullScreenCommand}" Content="Puni ekran" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
-                        <Button Command="{Binding ToggleThemeCommand}" Content="Tema" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
-                    </StackPanel>
-                </Grid>
-                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
-                    <TextBlock Text="Veličina gumba:" VerticalAlignment="Center" FontSize="16"/>
-                    <Slider Value="{Binding ButtonScale, Mode=TwoWay}" Width="200" Minimum="1" Maximum="2" />
-                </StackPanel>
-            </StackPanel>
-        </DockPanel>
-    </Grid>
+    </DockPanel>
 </Window>

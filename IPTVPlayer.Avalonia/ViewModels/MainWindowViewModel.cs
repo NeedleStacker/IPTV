@@ -1,6 +1,7 @@
 using Avalonia;
-using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,11 +19,11 @@ namespace IPTVPlayer.Avalonia.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
-        private readonly M3uService _m3uService;
-        private readonly SettingsService _settingsService;
-        private readonly EpgService _epgService;
-        private List<Channel> _allChannels;
-        private LibVLC _libVLC;
+        private readonly M3uService _m3uService = new();
+        private readonly SettingsService _settingsService = new();
+        private readonly EpgService _epgService = new();
+        private List<Channel> _allChannels = new();
+        private readonly LibVLC _libVLC = new();
 
         [ObservableProperty]
         private MediaPlayer mediaPlayer;
@@ -64,7 +65,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private double buttonFontSize = 18;
 
         [ObservableProperty]
-        private Thickness buttonPadding = new Thickness(15, 10);
+        private Thickness buttonPadding = new(15, 10);
 
         [ObservableProperty]
         private bool isVideoFullScreen;
@@ -88,15 +89,10 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         public MainWindowViewModel()
         {
-            _m3uService = new M3uService();
-            _settingsService = new SettingsService();
-            _epgService = new EpgService();
-            _allChannels = new List<Channel>();
-            Categories = new ObservableCollection<string>();
-            Channels = new ObservableCollection<Channel>();
+            Categories = new();
+            Channels = new();
 
-            _libVLC = new LibVLC();
-            MediaPlayer = new MediaPlayer(_libVLC);
+            MediaPlayer = new(_libVLC);
 
             MediaPlayer.LengthChanged += (s, e) => OnPropertyChanged(nameof(IsVOD));
             MediaPlayer.PositionChanged += (s, e) => Position = e.Position;
@@ -115,7 +111,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
         partial void OnButtonScaleChanged(double value)
         {
             ButtonFontSize = 18 * value;
-            ButtonPadding = new Thickness(15 * value, 10 * value);
+            ButtonPadding = new(15 * value, 10 * value);
             SettingsChanged();
         }
 
@@ -131,11 +127,11 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private void SettingsChanged()
         {
             var settings = _settingsService.LoadSettings(); // Load existing to preserve other settings
-            settings.LastM3uPath = this.M3uFilePath;
-            settings.Volume = this.Volume;
-            settings.IsAutoLoadEnabled = this.IsAutoLoadEnabled;
-            settings.ButtonScale = this.ButtonScale;
-            settings.CategoryOrder = new List<string>(this.Categories); // Save current order
+            settings.LastM3uPath = M3uFilePath;
+            settings.Volume = Volume;
+            settings.IsAutoLoadEnabled = IsAutoLoadEnabled;
+            settings.ButtonScale = ButtonScale;
+            settings.CategoryOrder = new(Categories); // Save current order
             _settingsService.SaveSettings(settings);
         }
 
@@ -182,7 +178,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
             if (!string.IsNullOrEmpty(FilterText))
             {
                 if (filteredChannels != null)
-                    filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
+                    filteredChannels = filteredChannels.Where(c => c.Name?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) == true).ToList();
             }
 
             Dispatcher.UIThread.Post(() =>
@@ -211,15 +207,24 @@ namespace IPTVPlayer.Avalonia.ViewModels
         [RelayCommand]
         private async Task SelectFile()
         {
-            var dialog = new OpenFileDialog();
-            dialog.Filters.Add(new FileDialogFilter() { Name = "M3U datoteke", Extensions = { "m3u", "m3u8" } });
-            dialog.AllowMultiple = false;
-
-            var result = await dialog.ShowAsync(new Window());
-
-            if (result != null && result.Any())
+            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop || desktop.MainWindow is null)
             {
-                M3uFilePath = result.First();
+                return;
+            }
+
+            var files = await desktop.MainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Odaberi M3U datoteku",
+                AllowMultiple = false,
+                FileTypeFilter = new[] { new FilePickerFileType("M3U datoteke") { Patterns = new[] { "*.m3u", "*.m3u8" } } }
+            });
+
+            if (files.Count > 0)
+            {
+                var path = files[0].TryGetLocalPath();
+                if (path is null) return;
+
+                M3uFilePath = path;
                 await LoadM3u();
             }
         }
@@ -229,7 +234,11 @@ namespace IPTVPlayer.Avalonia.ViewModels
         {
             var channelToPlay = channel ?? SelectedChannel;
             if (channelToPlay?.Url == null) return;
-            MediaPlayer.Play(new Media(_libVLC, channelToPlay.Url, FromType.FromLocation));
+
+            if (Uri.TryCreate(channelToPlay.Url, UriKind.Absolute, out var uri))
+            {
+                MediaPlayer.Play(new Media(_libVLC, uri));
+            }
         }
 
         [RelayCommand]
@@ -358,6 +367,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
         {
             MediaPlayer?.Dispose();
             _libVLC?.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }
