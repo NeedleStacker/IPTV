@@ -4,7 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Styling;
 using IPTVPlayer.Avalonia.ViewModels;
 using LibVLCSharp.Avalonia;
-using LibVLCSharp.Shared;
+using System.Diagnostics;
 
 namespace IPTVPlayer.Avalonia
 {
@@ -37,6 +37,7 @@ namespace IPTVPlayer.Avalonia
 
         private void MainWindow_Loaded(object? sender, RoutedEventArgs e)
         {
+            Debug.WriteLine("[MainWindow] Window Loaded event fired.");
             var videoView = this.FindControl<VideoView>("videoView");
             if (videoView != null)
             {
@@ -45,7 +46,12 @@ namespace IPTVPlayer.Avalonia
 
             if (_viewModel.IsAutoLoadEnabled && _viewModel.LoadM3uCommand.CanExecute(null))
             {
+                Debug.WriteLine("[MainWindow] Auto-load is enabled. Executing LoadM3uCommand.");
                 _viewModel.LoadM3uCommand.Execute(null);
+            }
+            else
+            {
+                Debug.WriteLine("[MainWindow] Auto-load is disabled or command cannot execute.");
             }
         }
     }

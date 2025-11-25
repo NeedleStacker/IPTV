@@ -10,6 +10,7 @@ using LibVLCSharp.Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -137,9 +138,15 @@ namespace IPTVPlayer.Avalonia.ViewModels
         [RelayCommand]
         private async Task LoadM3u()
         {
-            if (string.IsNullOrWhiteSpace(M3uFilePath)) return;
+            if (string.IsNullOrWhiteSpace(M3uFilePath))
+            {
+                Debug.WriteLine("[ViewModel] LoadM3u called but M3uFilePath is empty. Aborting.");
+                return;
+            }
 
+            Debug.WriteLine("[ViewModel] LoadM3u command started.");
             _allChannels = await _m3uService.ParseM3u(M3uFilePath);
+            Debug.WriteLine($"[ViewModel] Loaded {_allChannels.Count} channels from service.");
             SettingsChanged();
 
             var groupTitles = _allChannels.Select(c => c.GroupTitle).Distinct().OrderBy(g => g).ToList();
@@ -149,6 +156,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
             {
                 if (group != null) Categories.Add(group);
             }
+            Debug.WriteLine($"[ViewModel] Found {Categories.Count} categories.");
 
             SelectedCategory = "Svi kanali";
             UpdateFilteredChannels();
@@ -158,7 +166,9 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         private void UpdateFilteredChannels()
         {
+            Debug.WriteLine("[ViewModel] UpdateFilteredChannels called.");
             var filteredChannels = _allChannels;
+            Debug.WriteLine($"[ViewModel]   - Before filtering: {filteredChannels?.Count ?? 0} channels.");
 
             if (!string.IsNullOrEmpty(SelectedCategory) && SelectedCategory != "Svi kanali")
             {
@@ -172,6 +182,8 @@ namespace IPTVPlayer.Avalonia.ViewModels
                     filteredChannels = filteredChannels.Where(c => c.Name?.ToLower().Contains(FilterText.ToLower()) == true).ToList();
             }
 
+            Debug.WriteLine($"[ViewModel]   - After filtering (Category: '{SelectedCategory}', Filter: '{FilterText}'): {filteredChannels?.Count ?? 0} channels.");
+
             Channels.Clear();
             if (filteredChannels != null)
             {
@@ -180,6 +192,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
                     Channels.Add(channel);
                 }
             }
+            Debug.WriteLine($"[ViewModel]   - Final collection for UI has {Channels.Count} channels.");
         }
 
         private async Task LoadEpgData()
