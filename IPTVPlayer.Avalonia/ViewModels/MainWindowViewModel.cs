@@ -66,6 +66,9 @@ namespace IPTVPlayer.Avalonia.ViewModels
         [ObservableProperty]
         private Thickness buttonPadding = new Thickness(15, 10);
 
+        [ObservableProperty]
+        private bool isVideoFullScreen;
+
         public int Volume
         {
             get => MediaPlayer.Volume;
@@ -271,6 +274,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
             if (SelectedCategory == null) return;
             var index = Categories.IndexOf(SelectedCategory);
             Categories.Move(index, index - 1);
+            SelectedCategory = Categories[index - 1]; // Keep the item selected
             SettingsChanged();
         }
 
@@ -286,6 +290,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
             if (SelectedCategory == null) return;
             var index = Categories.IndexOf(SelectedCategory);
             Categories.Move(index, index + 1);
+            SelectedCategory = Categories[index + 1]; // Keep the item selected
             SettingsChanged();
         }
 
@@ -312,7 +317,7 @@ namespace IPTVPlayer.Avalonia.ViewModels
         [RelayCommand]
         private void ToggleFullScreen()
         {
-            ToggleFullScreenAction?.Invoke();
+            IsVideoFullScreen = !IsVideoFullScreen;
         }
 
         [RelayCommand]
