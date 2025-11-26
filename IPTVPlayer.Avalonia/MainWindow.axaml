@@ -35,9 +35,9 @@
             <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Margin="10,0,5,10" FontSize="18" />
 
             <!-- Channels -->
-            <DockPanel Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
-                <TextBox DockPanel.Dock="Top" Text="{Binding FilterText, Mode=TwoWay}" Watermark="Pretraži kanale..." Margin="5,10,10,5" FontSize="16"/>
-                <DataGrid ItemsSource="{Binding Channels}"
+            <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" RowDefinitions="Auto,*">
+                <TextBox Grid.Row="0" Text="{Binding FilterText, Mode=TwoWay}" Watermark="Pretraži kanale..." Margin="5,10,10,5" FontSize="16"/>
+                <DataGrid Grid.Row="1" ItemsSource="{Binding Channels}"
                           SelectedItem="{Binding SelectedChannel}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
@@ -53,7 +53,7 @@
                         <DataGridTextColumn Header="Kanal" Binding="{Binding Name}" Width="*" />
                     </DataGrid.Columns>
                 </DataGrid>
-            </DockPanel>
+            </Grid>
         </Grid>
 
         <!-- Main Content: Video Player and Controls -->
@@ -64,7 +64,7 @@
             </Border>
 
             <!-- Playback Controls -->
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Vertical" Spacing="10" Margin="10">
+            <StackPanel Name="playbackControls" DockPanel.Dock="Bottom" Orientation="Vertical" Spacing="10" Margin="10">
 
                 <!-- Progress Bar (for VOD) -->
                 <Slider Value="{Binding Position, Mode=TwoWay}" Minimum="0" Maximum="1" IsVisible="{Binding IsVOD}" />
