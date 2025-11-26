@@ -3,15 +3,18 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using IPTVPlayer.Avalonia.ViewModels;
 using LibVLCSharp.Avalonia;
-using System.ComponentModel;
+using System;
+using System.Diagnostics;
 
 namespace IPTVPlayer.Avalonia
 {
     public partial class MainWindow : Window
     {
         private readonly MainWindowViewModel _viewModel;
+        private DispatcherTimer _hideControlsTimer;
 
         public MainWindow()
         {
@@ -19,18 +22,7 @@ namespace IPTVPlayer.Avalonia
             _viewModel = new MainWindowViewModel();
             DataContext = _viewModel;
 
-            this.KeyDown += MainWindow_KeyDown;
-            this.Loaded += MainWindow_Loaded;
-            this.Closing += (s, e) => _viewModel.Dispose();
-        }
-
-        private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Escape && _viewModel.IsVideoFullScreen)
-            {
-                _viewModel.IsVideoFullScreen = false;
-            }
-        }
+            _viewModel.ToggleFullScreenAction = ToggleFullScreen;
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
@@ -43,6 +35,58 @@ namespace IPTVPlayer.Avalonia
                 {
                     _viewModel.IsVideoFullScreen = false;
                 }
+            };
+
+            this.Loaded += MainWindow_Loaded;
+            this.Closing += (s, e) => _viewModel.Dispose();
+            this.KeyDown += OnKeyDown;
+
+            _hideControlsTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(3)
+            };
+            _hideControlsTimer.Tick += (s, e) =>
+            {
+                this.FindControl<StackPanel>("playbackControls").IsVisible = false;
+                _hideControlsTimer.Stop();
+            };
+
+            this.PointerMoved += (s, e) =>
+            {
+                if (WindowState == WindowState.FullScreen)
+                {
+                    this.FindControl<StackPanel>("playbackControls").IsVisible = true;
+                    _hideControlsTimer.Stop();
+                    _hideControlsTimer.Start();
+                }
+            };
+        }
+
+        private void ToggleFullScreen()
+        {
+            var playbackControls = this.FindControl<StackPanel>("playbackControls");
+            if (WindowState == WindowState.FullScreen)
+            {
+                WindowState = WindowState.Maximized;
+                SystemDecorations = SystemDecorations.Full;
+                playbackControls.IsVisible = true;
+                _hideControlsTimer.Stop();
+                Cursor = new Cursor(StandardCursorType.Arrow);
+            }
+            else
+            {
+                WindowState = WindowState.FullScreen;
+                SystemDecorations = SystemDecorations.None;
+                _hideControlsTimer.Start();
+                Cursor = new Cursor(StandardCursorType.None);
+            }
+        }
+
+        private void OnKeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape && WindowState == WindowState.FullScreen)
+            {
+                ToggleFullScreen();
             }
         }
 
