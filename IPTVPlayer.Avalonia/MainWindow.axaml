@@ -50,26 +50,6 @@
                 </DataGrid.Columns>
             </DataGrid>
 
-            <!-- Channels -->
-            <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" RowDefinitions="Auto,*">
-                <TextBox Grid.Row="0" Text="{Binding FilterText, Mode=TwoWay}" Watermark="Pretraži kanale..." Margin="5,10,10,5" FontSize="16"/>
-                <DataGrid Grid.Row="1" ItemsSource="{Binding Channels}"
-                          SelectedItem="{Binding SelectedChannel}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          FontSize="{Binding FontSize}"
-                          RowHeight="50"
-                          Margin="5,0,10,10">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Logo" Width="70">
-                            <DataTemplate>
-                                <Image Source="{Binding TvgLogo}" Height="40" Margin="5"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Kanal" Binding="{Binding Name}" Width="*" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Grid>
         </Grid>
 
         <!-- Main Content: Video Player and Controls -->
