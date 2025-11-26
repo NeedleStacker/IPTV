@@ -30,30 +30,30 @@
 
         <!-- Left Panel: Categories and Channels -->
         <Grid DockPanel.Dock="Left" ColumnDefinitions="250, 400" RowDefinitions="Auto,*" MinWidth="650">
-            <!-- Categories -->
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Kategorije" FontWeight="Bold" FontSize="20" Margin="10"/>
-            <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Margin="10,0,5,10" FontSize="18" />
 
-            <!-- Channels -->
-            <DockPanel Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
-                <TextBox DockPanel.Dock="Top" Text="{Binding FilterText, Mode=TwoWay}" Watermark="Pretraži kanale..." Margin="5,10,10,5" FontSize="16"/>
-                <DataGrid ItemsSource="{Binding Channels}"
-                          SelectedItem="{Binding SelectedChannel}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          FontSize="{Binding FontSize}"
-                          RowHeight="50"
-                          Margin="5,0,10,10">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Logo" Width="70">
-                            <DataTemplate>
-                                <Image Source="{Binding TvgLogo}" Height="40" Margin="5"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Kanal" Binding="{Binding Name}" Width="*" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </DockPanel>
+            <!-- Row 0: Headers -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Kategorije" FontWeight="Bold" FontSize="20" Margin="10"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding FilterText, Mode=TwoWay}" Watermark="Pretraži kanale..." Margin="5,10,10,5" FontSize="16"/>
+
+            <!-- Row 1: Lists -->
+            <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Margin="10,0,5,10" FontSize="18" />
+            <DataGrid Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Channels}"
+                      SelectedItem="{Binding SelectedChannel}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      FontSize="{Binding FontSize}"
+                      RowHeight="50"
+                      Margin="5,0,10,10">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Logo" Width="70">
+                        <DataTemplate>
+                            <Image Source="{Binding TvgLogo}" Height="40" Margin="5"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Kanal" Binding="{Binding Name}" Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+
         </Grid>
 
         <!-- Main Content: Video Player and Controls -->
@@ -64,7 +64,7 @@
             </Border>
 
             <!-- Playback Controls -->
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Vertical" Spacing="10" Margin="10">
+            <StackPanel Name="playbackControls" DockPanel.Dock="Bottom" Orientation="Vertical" Spacing="10" Margin="10">
 
                 <!-- Progress Bar (for VOD) -->
                 <Slider Value="{Binding Position, Mode=TwoWay}" Minimum="0" Maximum="1" IsVisible="{Binding IsVOD}" />
