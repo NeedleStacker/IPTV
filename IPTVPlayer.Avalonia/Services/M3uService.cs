@@ -1,6 +1,5 @@
 using IPTVPlayer.Avalonia.Models;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -13,7 +12,6 @@ namespace IPTVPlayer.Avalonia.Services
     {
         public async Task<List<Channel>> ParseM3u(string filePath)
         {
-            Debug.WriteLine($"[M3uService] Starting to parse M3U file at: {filePath}");
             string content;
             if (filePath.StartsWith("http"))
             {
@@ -22,15 +20,13 @@ namespace IPTVPlayer.Avalonia.Services
             }
             else
             {
+                // check if file exists
                 if (!File.Exists(filePath))
                 {
-                    Debug.WriteLine($"[M3uService] ERROR: File not found: {filePath}");
                     return new List<Channel>();
                 }
                 content = await File.ReadAllTextAsync(filePath);
             }
-
-            Debug.WriteLine($"[M3uService] File content loaded. First 100 chars: {content.Substring(0, 100)}");
 
             var channels = new List<Channel>();
             var lines = content.Split('\n');
@@ -67,7 +63,6 @@ namespace IPTVPlayer.Avalonia.Services
                 }
             }
 
-            Debug.WriteLine($"[M3uService] Finished parsing. Found {channels.Count} channels.");
             return channels;
         }
     }

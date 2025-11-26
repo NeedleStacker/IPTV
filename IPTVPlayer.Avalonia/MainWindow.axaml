@@ -8,13 +8,9 @@
         x:Class="IPTVPlayer.Avalonia.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="IPTV Player"
-        WindowState="Maximized"
+        WindowState="{Binding WindowState}"
+        SystemDecorations="{Binding SystemDecorations}"
         WindowStartupLocation="CenterScreen">
-
-    <Design.DataContext>
-        <!-- This only sets the design time DataContext. -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
 
     <DockPanel>
 
@@ -68,9 +64,7 @@
 
                 <!-- Progress Bar (for VOD) -->
                 <Slider Value="{Binding Position, Mode=TwoWay}" Minimum="0" Maximum="1" IsVisible="{Binding IsVOD}" />
-
                 <Grid ColumnDefinitions="Auto,*,Auto">
-                    <!-- Left: Playback -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
                         <Button Command="{Binding PlayCommand}" Content="▶ Play" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
                         <Button Command="{Binding PauseCommand}" Content="❚❚ Pauza" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
@@ -78,27 +72,76 @@
                         <Button Command="{Binding PrevChannelCommand}" Content="&lt;&lt;" ToolTip.Tip="Prethodni kanal" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
                         <Button Command="{Binding NextChannelCommand}" Content="&gt;&gt;" ToolTip.Tip="Sljedeći kanal" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
                     </StackPanel>
-
-                    <!-- Center: Volume -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Button Command="{Binding DecreaseVolumeCommand}" Content="-" FontSize="18" Padding="15,10"/>
                         <Slider Value="{Binding Volume, Mode=TwoWay}" Width="200" Minimum="0" Maximum="100"/>
                         <Button Command="{Binding IncreaseVolumeCommand}" Content="+" FontSize="18" Padding="15,10"/>
                     </StackPanel>
-
-                    <!-- Right: Other Controls -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
                         <Button Command="{Binding ToggleFullScreenCommand}" Content="Puni ekran" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
                         <Button Command="{Binding ToggleThemeCommand}" Content="Tema" FontSize="{Binding ButtonFontSize}" Padding="{Binding ButtonPadding}"/>
                     </StackPanel>
                 </Grid>
-
-                <!-- Button Size Slider -->
                 <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
                     <TextBlock Text="Veličina gumba:" VerticalAlignment="Center" FontSize="16"/>
                     <Slider Value="{Binding ButtonScale, Mode=TwoWay}" Width="200" Minimum="1" Maximum="2" />
                 </StackPanel>
             </StackPanel>
         </DockPanel>
+
+        <!-- Main Content Grid -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <!-- Top Bar -->
+            <Border Grid.Row="0" Grid.ColumnSpan="2" Padding="10" BorderBrush="Gray" BorderThickness="0,0,0,1" IsVisible="{Binding !IsVideoFullScreen}">
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                    <TextBox Text="{Binding M3uFilePath}" Watermark="Putanja do M3U datoteke..." VerticalAlignment="Center" FontSize="16" Margin="0,0,10,0" />
+                    <Button Command="{Binding SelectFileCommand}" Content="Odaberi datoteku" Classes="accent" Padding="15,10" FontSize="16"/>
+                    <Button Command="{Binding LoadM3uCommand}" Content="Učitaj" Margin="10,0" Padding="15,10" FontSize="16"/>
+                    <CheckBox IsChecked="{Binding IsAutoLoadEnabled}" Content="Automatski učitaj" VerticalAlignment="Center" FontSize="16"/>
+                </Grid>
+            </Border>
+
+            <!-- Left Panel: Categories and Channels -->
+            <Grid Grid.Row="1" Grid.Column="0" ColumnDefinitions="250, 400" RowDefinitions="Auto,*,Auto" IsVisible="{Binding !IsVideoFullScreen}">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Kategorije" FontWeight="Bold" FontSize="20" Margin="10"/>
+                <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Margin="10,0,5,10" FontSize="18" />
+
+                <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="10">
+                    <Button Command="{Binding MoveCategoryUpCommand}" Content="↑" FontSize="24" ToolTip.Tip="Pomakni gore"/>
+                    <Button Command="{Binding MoveCategoryDownCommand}" Content="↓" FontSize="24" ToolTip.Tip="Pomakni dolje"/>
+                </StackPanel>
+
+                <DockPanel Grid.Row="0" Grid.Column="1" Grid.RowSpan="3">
+                    <TextBox DockPanel.Dock="Top" Text="{Binding FilterText, Mode=TwoWay}" Watermark="Pretraži kanale..." Margin="5,10,10,5" FontSize="16"/>
+                    <DataGrid ItemsSource="{Binding Channels}"
+                              SelectedItem="{Binding SelectedChannel}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              FontSize="{Binding FontSize}" RowHeight="50" Margin="5,0,10,10">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Logo" Width="70">
+                                <DataTemplate>
+                                    <Image Source="{Binding TvgLogo}" Height="40" Margin="5"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Kanal" Binding="{Binding Name}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Grid>
+
+            <!-- Video Player -->
+            <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="10" ClipToBounds="True">
+                <vlc:VideoView Name="videoView" />
+            </Border>
+
+        </Grid>
     </DockPanel>
 </Window>
