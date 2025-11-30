@@ -72,12 +72,6 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private bool isVideoFullScreen;
 
         [ObservableProperty]
-        private WindowState windowState = WindowState.Maximized;
-
-        [ObservableProperty]
-        private SystemDecorations systemDecorations = SystemDecorations.Full;
-
-        [ObservableProperty]
         private int volume;
 
         public Action? ToggleFullScreenAction { get; set; }
@@ -324,12 +318,6 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private void ToggleFullScreen()
         {
             IsVideoFullScreen = !IsVideoFullScreen;
-        }
-
-        partial void OnIsVideoFullScreenChanged(bool value)
-        {
-            WindowState = value ? WindowState.FullScreen : WindowState.Maximized;
-            SystemDecorations = value ? SystemDecorations.None : SystemDecorations.Full;
         }
 
         [RelayCommand]
