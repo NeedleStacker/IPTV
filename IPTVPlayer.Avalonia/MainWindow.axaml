@@ -8,8 +8,6 @@
         x:Class="IPTVPlayer.Avalonia.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="IPTV Player"
-        WindowState="{Binding WindowState}"
-        SystemDecorations="{Binding SystemDecorations}"
         WindowStartupLocation="CenterScreen">
 
     <DockPanel>
@@ -54,11 +52,6 @@
 
         <!-- Main Content: Video Player and Controls -->
         <DockPanel>
-            <!-- Video Player -->
-            <Border DockPanel.Dock="Top" BorderBrush="Black" BorderThickness="1" Margin="10" ClipToBounds="True">
-                <vlc:VideoView Name="videoView" />
-            </Border>
-
             <!-- Playback Controls -->
             <StackPanel Name="playbackControls" DockPanel.Dock="Bottom" Orientation="Vertical" Spacing="10" Margin="10">
 
