@@ -12,6 +12,7 @@ using LibVLCSharp.Shared;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -70,12 +71,6 @@ namespace IPTVPlayer.Avalonia.ViewModels
 
         [ObservableProperty]
         private bool isVideoFullScreen;
-
-        [ObservableProperty]
-        private WindowState windowState = WindowState.Maximized;
-
-        [ObservableProperty]
-        private SystemDecorations systemDecorations = SystemDecorations.Full;
 
         [ObservableProperty]
         private int volume;
@@ -324,12 +319,6 @@ namespace IPTVPlayer.Avalonia.ViewModels
         private void ToggleFullScreen()
         {
             IsVideoFullScreen = !IsVideoFullScreen;
-        }
-
-        partial void OnIsVideoFullScreenChanged(bool value)
-        {
-            WindowState = value ? WindowState.FullScreen : WindowState.Maximized;
-            SystemDecorations = value ? SystemDecorations.None : SystemDecorations.Full;
         }
 
         [RelayCommand]
