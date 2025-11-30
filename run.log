@@ -1,0 +1,4 @@
+/app/IPTVPlayer.Avalonia/MainWindow.axaml.cs(37,17): warning CS8602: Dereference of a possibly null reference. [/app/IPTVPlayer.Avalonia/IPTVPlayer.Avalonia.csproj]
+/app/IPTVPlayer.Avalonia/MainWindow.axaml.cs(45,21): warning CS8602: Dereference of a possibly null reference. [/app/IPTVPlayer.Avalonia/IPTVPlayer.Avalonia.csproj]
+/app/IPTVPlayer.Avalonia/MainWindow.axaml.cs(73,17): warning CS8602: Dereference of a possibly null reference. [/app/IPTVPlayer.Avalonia/IPTVPlayer.Avalonia.csproj]
+[0000561e4f7632b0] vlcpulse audio output error: PulseAudio server connection failure: Connection refused

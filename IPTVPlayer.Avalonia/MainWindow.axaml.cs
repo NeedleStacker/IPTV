@@ -24,19 +24,6 @@ namespace IPTVPlayer.Avalonia
 
             _viewModel.ToggleFullScreenAction = ToggleFullScreen;
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-        {
-            base.OnPropertyChanged(change);
-
-            if (change.Property == WindowStateProperty && WindowState == WindowState.Maximized)
-            {
-                // Un-fullscreen if the user maximizes the window manually
-                if (_viewModel.IsVideoFullScreen)
-                {
-                    _viewModel.IsVideoFullScreen = false;
-                }
-            };
-
             this.Loaded += MainWindow_Loaded;
             this.Closing += (s, e) => _viewModel.Dispose();
             this.KeyDown += OnKeyDown;
@@ -60,6 +47,20 @@ namespace IPTVPlayer.Avalonia
                     _hideControlsTimer.Start();
                 }
             };
+        }
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == WindowStateProperty && WindowState == WindowState.Maximized)
+            {
+                // Un-fullscreen if the user maximizes the window manually
+                if (_viewModel.IsVideoFullScreen)
+                {
+                    _viewModel.IsVideoFullScreen = false;
+                }
+            }
         }
 
         private void ToggleFullScreen()
