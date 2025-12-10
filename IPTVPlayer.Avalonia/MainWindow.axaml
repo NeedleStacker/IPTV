@@ -57,11 +57,10 @@
             </DockPanel>
         </Grid>
 
-        <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="10" ClipToBounds="True">
-            <vlc:VideoView Name="videoView" />
-        </Border>
-
-        <StackPanel Name="playbackControls" Grid.Row="2" Grid.ColumnSpan="2" Orientation="Vertical" Spacing="10" Margin="10" IsVisible="{Binding !IsVideoFullScreen}">
+        <!-- Main Content: Video Player and Controls -->
+        <DockPanel>
+            <!-- Playback Controls -->
+            <StackPanel Name="playbackControls" DockPanel.Dock="Bottom" Orientation="Vertical" Spacing="10" Margin="10">
 
             <Slider Value="{Binding Position, Mode=TwoWay}" Minimum="0" Maximum="1" IsVisible="{Binding IsVOD}" />
             <Grid ColumnDefinitions="Auto,*,Auto">
